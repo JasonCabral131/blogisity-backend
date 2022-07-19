@@ -90,10 +90,13 @@ exports.getBlogByCategory = async(req, res) => {
   try{
     const {category, page = 0} = req.query;
     const blogs = await Blog.find({category}) .limit(10)
+    .populate("category")
+    .populate("creator")
     .skip(page * 10)
     .sort({ createdAt: -1 })
     .lean();
-    return res.status(200).json({blogs})
+    const count = await Blog.find({category}).count();
+    return res.status(200).json({blog: blogs,   totalPages: Math.ceil(count / 10),})
   }catch(e){  
     return res.status(400).json({msg: "Failed to get Content"})
 

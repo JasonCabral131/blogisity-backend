@@ -11,7 +11,7 @@ exports.Mailing = (option) => {
 
       return new Promise((resolve, reject) => {
         var mailOptions = {
-            from: "7.11.grocery.info@gmail.com",
+            from: "noreply.blogisity@gmail.com",
             to: `${option.receiver}`,
             subject: `${option.subject}`,
             attachDataUrls: true,

@@ -1,6 +1,8 @@
 const Blog = require("./../model/Blog");
 const cloudinary = require("./../config/cloudinary");
 const { shuffleArray } = require("./../middleware/common.middleware");
+const fs = require("fs");
+const path = require("path");
 exports.Create = async (req, res) => {
   try {
     const { title, content, category } = req.body;
@@ -192,7 +194,14 @@ exports.deleteBlogPost = async(req, res) => {
     const {id} = req.params;
     const blog = await Blog.findOne({_id: id}).lean();
     if(blog){
-      await cloudinary.uploader.destroy(blog.headingImg.cloudinary_id);
+      if(process.env.production == "true"){
+        await cloudinary.uploader.destroy(blog.headingImg.cloudinary_id);
+      }else{
+        const pathname = path.basename(blog.headingImg.url);
+        console.log(pathname);
+        fs.unlinkSync(`./src/uploads/${pathname}`)
+      }
+     
     }
     const deleting = await Blog.findOneAndDelete({_id: id});
     if(deleting){
