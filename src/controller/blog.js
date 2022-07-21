@@ -1,6 +1,7 @@
 const Blog = require("./../model/Blog");
 const cloudinary = require("./../config/cloudinary");
 const { shuffleArray } = require("./../middleware/common.middleware");
+const Category = require("./../model/BlogCategory");
 const fs = require("fs");
 const path = require("path");
 exports.Create = async (req, res) => {
@@ -215,29 +216,52 @@ exports.deleteBlogPost = async(req, res) => {
 exports.updateBlogPost = async(req, res) => {
   try{
     const { title, content, category, id, cloudinary_id } = req.body;
-    Blog.findOne({_id: id})
+    Blog.findOne({_id: id, creator: req.user._id})
     .then(async (result) => {
       if(result){
         result.title = title;
         result.content = content;
         result.category = category;
         if (req.file) {
-          await cloudinary.uploader.destroy(cloudinary_id);
-          const result = await cloudinary.uploader.upload(req.file.path);
-          result.headingImg.url = result.secure_url;
-          result.headingImg.cloudinary_id = result.public_id;
+          if(cloudinary_id){
+            await cloudinary.uploader.destroy(cloudinary_id);
+          }
+          const resultNew = await cloudinary.uploader.upload(req.file.path);
+          result.headingImg.url = resultNew.secure_url;
+          result.headingImg.cloudinary_id = resultNew.public_id;
           const saving = await result.save();
           if(saving){
-            return res.status(200).json({msg: "Successfully Update Content"})
+            const blogUpdated = await Blog.findOne({_id: id, creator: req.user._id}).populate("category").lean();
+            return res.status(200).json({msg: "Successfully Update Content", blog: blogUpdated})
           }
           return res.status(400).json({msg: "Failed to Update Content"})
+        }
+        const saving = await result.save();
+        if(saving){
+          const blogUpdated = await Blog.findOne({_id: id, creator: req.user._id}).populate("category").lean();
+          return res.status(200).json({msg: "Successfully Update Content", blog: blogUpdated})
         }
       }
       return res.status(400).json({msg: "Failed to Update Content"})
     }).catch(e => {
+      console.log("error in catching",e)
       return res.status(400).json({msg: "Failed to Update Content"})
     })
   }catch(e){
+    console.log("error in pinka ubos",e)
     return res.status(400).json({msg: "Failed to Update Content"})
+  }
+}
+exports.getToUpdatePublishBlog = async(req, res) => {
+  try{
+    const {id} = req.params;
+    const blog = await Blog.findOne({_id: id, creator: req.user._id}).populate("category").lean();
+    if(blog){
+      const categories = await Category.find().lean();
+      return res.status(200).json({blog,categories })
+    }
+    return res.status(400).json({msg: "failed to get Blog Content"})
+  }catch(e){
+    return res.status(400).json({msg: "failed to get Blog Content"})
   }
 }

@@ -379,7 +379,10 @@ exports.ChangeUserProfile = async (req, res) => {
           { upsert: true }
         );
         if (updating) {
-          await cloudinary.uploader.destroy(updating.profile.cloudinary_id);
+          if(updating.profile.cloudinary_id){
+            await cloudinary.uploader.destroy(updating.profile.cloudinary_id);
+          }
+     
             const Updated = await User.findOne({_id: req.user._id}).lean();
 
           return res
@@ -393,6 +396,7 @@ exports.ChangeUserProfile = async (req, res) => {
           {
             $set: {
               "profile.url":process.env.url_public_folder + req.file.filename,
+              "profile.cloudinary_id": null
             },
           },
           { upsert: true }
@@ -431,7 +435,10 @@ exports.ChangeUserBackGroundProfile = async(req, res) => {
           { upsert: true }
         );
         if (updating) {
-          await cloudinary.uploader.destroy(updating.background.cloudinary_id);
+          if(updating.background.cloudinary_id){
+            await cloudinary.uploader.destroy(updating.background.cloudinary_id);
+          }
+         
             const Updated = await User.findOne({_id: req.user._id}).lean();
 
           return res
@@ -445,6 +452,7 @@ exports.ChangeUserBackGroundProfile = async(req, res) => {
           {
             $set: {
               "background.url":process.env.url_public_folder + req.file.filename,
+              "background.cloudinary_id": null
             },
           },
           { upsert: true }
