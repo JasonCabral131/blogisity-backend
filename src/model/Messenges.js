@@ -20,7 +20,12 @@ const MessengesSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
         default: null,
-    }
+    },
+    seen:{
+        type:Boolean,
+        default: false
+    },
+    
 }, {timestamps: true});
 
 module.exports = mongoose.model('messenges', MessengesSchema)
