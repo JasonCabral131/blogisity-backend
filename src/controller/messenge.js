@@ -1,6 +1,7 @@
 const Messenge = require("./../model/Messenges");
 const User = require("./../model/user");
 const cloudinary = require("./../config/cloudinary");
+const Follower = require("./../model/Followers");
 exports.sendMessage = async(req, res) => {
     try {
         const {reciever, messenges} = req.body;
@@ -48,5 +49,54 @@ exports.getMessenges = async(req, res) => {
 
     }catch(e){
         return res.status(400).json({msg: "Failed to Get Messenges"})
+    }
+}
+exports.getAllWriter = async(req, res) => {
+  try{
+    const { page = 0} = req.query;
+    User.find({onboarding: 1, _id: {$ne: req.user._id}})
+      .limit(10)
+      .skip(page * 10)
+      .exec(function (err, writer) {
+        if(err) {
+          return res.status(400).json({e: err})};
+        User.find({onboarding: 1, _id: {$ne: req.user._id}})
+          .count()
+          .exec(function (err, count) {
+            return res.status(200).json({
+              blog: writer,
+              count,
+              totalPages: Math.ceil(count / 10),
+            });
+          });
+      });
+  }catch(e){
+    return res.status(400).json({msg: "failed to get writer"})
+  }
+   
+   
+}
+exports.getAllFollowed = async(req, res) => {
+    try{
+        const {page = 0} = req.query;
+        Follower.find({follower: req.user._id})
+        .limit(10)
+        .populate("following")
+        .skip(page * 10)
+        .exec(function (err, writer) {
+            if(err) {
+                return res.status(400).json({e: err})};
+                Follower.find({follower: req.user._id})
+                .count()
+                .exec(function (err, count) {
+                  return res.status(200).json({
+                    blog: writer,
+                    count,
+                    totalPages: Math.ceil(count / 10),
+                  });
+                });
+        })
+    }catch(e){
+        return res.status(400).json({msg: "failed to get followed user"})
     }
 }
