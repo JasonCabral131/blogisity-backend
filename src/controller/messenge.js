@@ -9,10 +9,11 @@ exports.sendMessage = async(req, res) => {
             reciever,
             sender: req.user._id,
             messenges,
-            photos,
+            photos: [],
+            createdAt: new Date()
         }
         if(req.files){
-            for(let file of files){
+            for(let file of req.files){
                 if (process.env.production == "true") {
                     const result = await cloudinary.uploader.upload(file.path);
                     msgObj.photos = [...msgObj.photos, {url: result.secure_url, cloudinary_id:  result.public_id }]
@@ -25,6 +26,7 @@ exports.sendMessage = async(req, res) => {
         const saved = await new Messenge(msgObj).save();
         return res.status(200).json({msg: "Successfully Send", messenge: saved})
     } catch (error) {
+      console.log(error)
         return res.status(400).json({msg: "Failed to messenges"})
     }
 }
