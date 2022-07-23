@@ -102,3 +102,71 @@ exports.getAllFollowed = async(req, res) => {
         return res.status(400).json({msg: "failed to get followed user"})
     }
 }
+exports.getChatsRoom = async(req, res) => {
+  try{  
+    const chats = await Messenge.find({
+      $or: [
+        {
+          $and: [
+            { "sender": { $ne: null } },
+            { "reciever": req.user._id },
+          ],
+        },
+        {
+          $and: [
+            { "sender": req.user._id },
+            { "reciever": { $ne: null } },
+          ],
+        },
+      ],
+    }).populate("sender", "-password -passwordToken")
+      .populate("reciever", "-password -passwordToken")
+      .sort({ createdAt: -1 })
+      .lean();
+
+      let chatDetails = {};
+      for (let chat of chats) {
+        if (chat.hasOwnProperty("messenges") && chat.hasOwnProperty("photos")) {
+          if (chat.sender._id != req.user._id) {
+            const key = chat.sender._id;
+            chatDetails[key] = chatDetails[key] || [];
+            chatDetails[key].push({
+              date: chat.createdAt,
+              message: chat.messenges,
+              images: chat.photos,
+              byme: chat.sender ? true : false,
+              sender: chat.sender,
+            });
+          } else if (chat.reciever._id != req.user._id) {
+            if (typeof chat.reciever === "object") {
+              const key = chat.reciever._id;
+              chatDetails[key] = chatDetails[key] || [];
+              chatDetails[key].push({
+                date: chat.createdAt,
+                message: chat.messenges,
+                images: chat.photos,
+                byme: chat.sender ? true : false,
+                sender: chat.reciever,
+              });
+            }
+          }
+        }
+      }
+      let room = [];
+      for (let key of Object.keys(chatDetails)) {
+        const sent = await User.findOne({ _id: key }).lean();
+        if (sent) {
+          room.push({
+            sender: sent.name,
+            chats: chatDetails[key].length > 0 ? chatDetails[key][0] : null,
+            profile: sent.profile.url,
+            key,
+          });
+        }
+      }
+      return res.status(200).json({room})
+  }catch(e){
+    console.log(e)
+    return res.status(400).json({msg: "failed to get Chat room"})
+  }
+}
