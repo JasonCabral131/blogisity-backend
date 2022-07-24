@@ -8,11 +8,14 @@ exports.sendMessage = async(req, res) => {
         let msgObj = {
             reciever,
             sender: req.user._id,
-            messenges,
+            messenges: messenges === "null" ? null : messenges,
             photos: [],
             createdAt: new Date()
         }
-        if(req.files){
+       
+        if(req.files && req.files.length > 0){
+          const saved = await new Messenge(msgObj).save();
+          msgObj.messenges = null;
             for(let file of req.files){
                 if (process.env.production == "true") {
                     const result = await cloudinary.uploader.upload(file.path);
