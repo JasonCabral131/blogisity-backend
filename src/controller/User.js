@@ -296,8 +296,8 @@ exports.verifyUser = async (req, res) => {
       .status(200)
       .json({ msg: "Check your email for onboarding", token, user });
   } catch (e) {
-    console.log(e);
-    // return res.status(400).json({ msg: "Invalid User" });
+ 
+     return res.status(400).json({ msg: "Invalid User" });
   }
 };
 

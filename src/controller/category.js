@@ -51,7 +51,6 @@ exports.Categories = async (req, res) => {
           });
       });
   } catch (e) {
-    console
     return res.status(400).json({ msg: e });
   }
 };
