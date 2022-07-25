@@ -14,13 +14,12 @@ exports.AddActiveUser = async ( user ) => {
       }
     });
     if (!ifExist) {
-     
-      console.log(ActiveUser)
+      ActiveUser.push(user);
       return;
     }
   }
 };
-exports.getActiveUser = async ({ parent_id }) => {
+exports.getActiveUser =  () => {
   return ActiveUser;
 };
 exports.removeActiveUser =  (id) => {
@@ -28,5 +27,5 @@ exports.removeActiveUser =  (id) => {
     (val) => val._id.toString() != id.toString()
   );
   ActiveUser = filtered;
-  return ActiveBranch;
+  return ActiveUser;
 };

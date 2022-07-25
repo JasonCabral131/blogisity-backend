@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("./../model/user");
 const bcrypt = require("bcrypt");
-const {AddActiveUser} = require("./SocketController/index")
+const {AddActiveUser, getActiveUser, removeActiveUser} = require("./SocketController/index")
 module.exports = socketServer = (io) => {
   io.use(async (socket, next) => {
     try {
@@ -42,6 +42,8 @@ module.exports = socketServer = (io) => {
      
       socket.on("disconnect", async () => {
         console.log("user has been disconnected", socket.user);
+        removeActiveUser(socket.user._id);
+        io.emit("disconnected-from-server", {_id: socket.user._id.toString()})
       });
       socket.on("comment-user-blog", async (data, callback) => {
 
@@ -51,18 +53,23 @@ module.exports = socketServer = (io) => {
         if(user){
           AddActiveUser(user)
           socket.join(user._id.toString());
+          io.emit("connected-from-server", {_id: socket.user._id.toString()})
         }
       });
       socket.on("sending-chat-message", (data, callback) => {
           const {reciever} = data;
-            console.log(data)
           io.to(reciever).emit("new-chat-message", {
             data,
           });
-          console.log(socket.user._id);
           io.to(socket.user._id.toString()).emit("update-chat-message-inbox", {
             data,
           });
+      })
+      socket.on("is-active", (data, callback) => {
+        console.log(data);
+        
+        callback(  getActiveUser().some(pt => pt._id.toString() === data._id.toString()));
+        
       })
     } catch (e) {
       console.log(e);
